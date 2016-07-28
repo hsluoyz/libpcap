@@ -375,6 +375,10 @@ int	pcap_offline_read(pcap_t *, int, pcap_handler, u_char *);
    */
   #define strlcpy(x, y, z) \
 	strncpy_s((x), (z), (y), _TRUNCATE)
+  #define strlcat(x, y, z) \
+	strncat_s((x), (z), (y), _TRUNCATE)
+  #define sscanf \
+	sscanf_s
 
  #else
   #define strlcpy(x, y, z) \

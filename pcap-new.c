@@ -166,7 +166,7 @@ int pcap_findalldevs_ex(char *source, struct pcap_rmtauth *auth, pcap_if_t **all
 			}
 
 			/* Copy the new device identifier into the correct memory location */
-			strncpy(dev->name, tmpstring, strlen(tmpstring) + 1);
+			strlcpy(dev->name, tmpstring, strlen(tmpstring) + 1);
 
 
 			/* Create the new device description */
@@ -189,7 +189,7 @@ int pcap_findalldevs_ex(char *source, struct pcap_rmtauth *auth, pcap_if_t **all
 			}
 
 			/* Copy the new device description into the correct memory location */
-			strncpy(dev->description, tmpstring, strlen(tmpstring) + 1);
+			strlcpy(dev->description, tmpstring, strlen(tmpstring) + 1);
 
 			dev = dev->next;
 		}
@@ -312,7 +312,7 @@ int pcap_findalldevs_ex(char *source, struct pcap_rmtauth *auth, pcap_if_t **all
 					return -1;
 				}
 
-				strncpy(dev->name, tmpstring, stringlen);
+				strlcpy(dev->name, tmpstring, stringlen);
 
 				dev->name[stringlen] = 0;
 
@@ -331,7 +331,7 @@ int pcap_findalldevs_ex(char *source, struct pcap_rmtauth *auth, pcap_if_t **all
 				}
 
 				/* Copy the new device description into the correct memory location */
-				strncpy(dev->description, tmpstring, stringlen + 1);
+				strlcpy(dev->description, tmpstring, stringlen + 1);
 
 				pcap_close(fp);
 			}
@@ -517,7 +517,7 @@ int pcap_findalldevs_ex(char *source, struct pcap_rmtauth *auth, pcap_if_t **all
 			}
 
 			/* Copy the new device name into the correct memory location */
-			strncpy(dev->name, tmpstring2, stringlen + 1);
+			strlcpy(dev->name, tmpstring2, stringlen + 1);
 		}
 
 		if (findalldevs_if.desclen)
@@ -549,7 +549,7 @@ int pcap_findalldevs_ex(char *source, struct pcap_rmtauth *auth, pcap_if_t **all
 			}
 
 			/* Copy the new device description into the correct memory location */
-			strncpy(dev->description, tmpstring2, stringlen + 1);
+			strlcpy(dev->description, tmpstring2, stringlen + 1);
 		}
 
 		dev->flags = ntohl(findalldevs_if.flags);
@@ -671,10 +671,10 @@ int pcap_createsrcstr(char *source, int type, const char *host, const char *port
 	{
 	case PCAP_SRC_FILE:
 	{
-		strncpy(source, PCAP_SRC_FILE_STRING, PCAP_BUF_SIZE);
+		strlcpy(source, PCAP_SRC_FILE_STRING, PCAP_BUF_SIZE);
 		if ((name) && (*name))
 		{
-			strncat(source, name, PCAP_BUF_SIZE);
+			strlcat(source, name, PCAP_BUF_SIZE);
 			return 0;
 		}
 		else
@@ -686,27 +686,27 @@ int pcap_createsrcstr(char *source, int type, const char *host, const char *port
 
 	case PCAP_SRC_IFREMOTE:
 	{
-		strncpy(source, PCAP_SRC_IF_STRING, PCAP_BUF_SIZE);
+		strlcpy(source, PCAP_SRC_IF_STRING, PCAP_BUF_SIZE);
 		if ((host) && (*host))
 		{
 			if ((strcspn(host, "aAbBcCdDeEfFgGhHjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ")) == strlen(host))
 			{
 				/* the host name does not contains alphabetic chars. So, it is a numeric address */
 				/* In this case we have to include it between square brackets */
-				strncat(source, "[", PCAP_BUF_SIZE);
-				strncat(source, host, PCAP_BUF_SIZE);
-				strncat(source, "]", PCAP_BUF_SIZE);
+				strlcat(source, "[", PCAP_BUF_SIZE);
+				strlcat(source, host, PCAP_BUF_SIZE);
+				strlcat(source, "]", PCAP_BUF_SIZE);
 			}
 			else
-				strncat(source, host, PCAP_BUF_SIZE);
+				strlcat(source, host, PCAP_BUF_SIZE);
 
 			if ((port) && (*port))
 			{
-				strncat(source, ":", PCAP_BUF_SIZE);
-				strncat(source, port, PCAP_BUF_SIZE);
+				strlcat(source, ":", PCAP_BUF_SIZE);
+				strlcat(source, port, PCAP_BUF_SIZE);
 			}
 
-			strncat(source, "/", PCAP_BUF_SIZE);
+			strlcat(source, "/", PCAP_BUF_SIZE);
 		}
 		else
 		{
@@ -715,17 +715,17 @@ int pcap_createsrcstr(char *source, int type, const char *host, const char *port
 		}
 
 		if ((name) && (*name))
-			strncat(source, name, PCAP_BUF_SIZE);
+			strlcat(source, name, PCAP_BUF_SIZE);
 
 		return 0;
 	}
 
 	case PCAP_SRC_IFLOCAL:
 	{
-		strncpy(source, PCAP_SRC_IF_STRING, PCAP_BUF_SIZE);
+		strlcpy(source, PCAP_SRC_IF_STRING, PCAP_BUF_SIZE);
 
 		if ((name) && (*name))
-			strncat(source, name, PCAP_BUF_SIZE);
+			strlcat(source, name, PCAP_BUF_SIZE);
 
 		return 0;
 	}
@@ -804,7 +804,7 @@ int pcap_parsesrcstr(const char *source, int *type, char *host, char *port, char
 				{
 					/* We're on a local capture */
 					if (*ptr)
-						strncpy(tmpname, ptr, PCAP_BUF_SIZE);
+						strlcpy(tmpname, ptr, PCAP_BUF_SIZE);
 
 					/* Clean the host name, since it is a remote capture */
 					/* NOTE: the host name has been assigned in the previous "ntoken= sscanf(...)" line */
@@ -818,9 +818,9 @@ int pcap_parsesrcstr(const char *source, int *type, char *host, char *port, char
 		}
 
 		if (host)
-			strcpy(host, tmphost);
+			strlcpy(host, tmphost, PCAP_BUF_SIZE);
 		if (port)
-			strcpy(port, tmpport);
+			strlcpy(port, tmpport, PCAP_BUF_SIZE);
 		if (type)
 			*type = tmptype;
 
@@ -833,7 +833,7 @@ int pcap_parsesrcstr(const char *source, int *type, char *host, char *port, char
 			 */
 			if (tmpname[0])
 			{
-				strcpy(name, tmpname);
+				strlcpy(name, tmpname, PCAP_BUF_SIZE);
 			}
 			else
 			{
@@ -854,7 +854,7 @@ int pcap_parsesrcstr(const char *source, int *type, char *host, char *port, char
 		if (*ptr)
 		{
 			if (name)
-				strncpy(name, ptr, PCAP_BUF_SIZE);
+				strlcpy(name, ptr, PCAP_BUF_SIZE);
 
 			if (type)
 				*type = PCAP_SRC_FILE;
@@ -875,7 +875,7 @@ int pcap_parsesrcstr(const char *source, int *type, char *host, char *port, char
 	if ((source) && (*source))
 	{
 		if (name)
-			strncpy(name, source, PCAP_BUF_SIZE);
+			strlcpy(name, source, PCAP_BUF_SIZE);
 
 		if (type)
 			*type = PCAP_SRC_IFLOCAL;
@@ -982,7 +982,7 @@ pcap_t *pcap_open(const char *source, int snaplen, int flags, int read_timeout, 
 		break;
 
 	default:
-		strcpy(errbuf, "Source type not supported");
+		strlcpy(errbuf, "Source type not supported", PCAP_ERRBUF_SIZE);
 		return NULL;
 	}
 	return fp;
@@ -1257,7 +1257,7 @@ int pcap_remoteact_list(char *hostlist, char sep, int size, char *errbuf)
 			return -1;
 		}
 
-		strcat(hostlist, hoststr);
+		strlcat(hostlist, hoststr, RPCAP_HOSTLIST_SIZE + 1);
 		hostlist[len - 1] = sep;
 		hostlist[len] = 0;
 

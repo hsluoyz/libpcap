@@ -513,12 +513,14 @@ static int pcap_stats_remote(pcap_t *p, struct pcap_stat *ps)
  * \brief It retrieves network statistics from the other peer.
  *
  * This function is just a void cointainer, since the work is done by the rpcap_stats_remote().
- * See that funcion for more details.
+ * See that function for more details.
  *
  * Parameters and return values are exactly the same of the pcap_stats_ex().
  */
-static struct pcap_stat *pcap_stats_ex_remote(pcap_t *p)
+static struct pcap_stat *pcap_stats_ex_remote(pcap_t *p, int *pcap_stat_size)
 {
+	*pcap_stat_size = sizeof(p->stat);
+
 	/* '0' (third param) means 'standard pcap_stats()' */
 	return (rpcap_stats_remote(p, &(p->stat), PCAP_STATS_EX));
 }
@@ -1137,7 +1139,7 @@ int pcap_startcapture_remote(pcap_t *fp)
 			memset(&hints, 0, sizeof(struct addrinfo));
 			hints.ai_family = ai_family;		/* Use the same address family of the control socket */
 			hints.ai_socktype = (md->rmt_flags & PCAP_OPENFLAG_DATATX_UDP) ? SOCK_DGRAM : SOCK_STREAM;
-			sprintf(portdata, "%d", ntohs(startcapreply.portdata));
+			pcap_snprintf(portdata, PCAP_BUF_SIZE, "%d", ntohs(startcapreply.portdata));
 
 			/* Let's the server pick up a free network port for us */
 			if (sock_initaddress(host, portdata, &hints, &addrinfo, fp->errbuf, PCAP_ERRBUF_SIZE) == -1)
@@ -1195,11 +1197,11 @@ int pcap_startcapture_remote(pcap_t *fp)
 	 * So, here bufsize is the whole size of the user buffer.
 	 * In case the bufsize returned is too small, let's adjust it accordingly.
 	 */
-	if (fp->bufsize <= fp->snapshot)
+	if (fp->bufsize <= (u_int) fp->snapshot)
 		fp->bufsize += sizeof(struct pcap_pkthdr);
 
 	/* if the current socket buffer is smaller than the desired one */
-	if (sockbufsize < fp->bufsize)
+	if ((u_int) sockbufsize < fp->bufsize)
 	{
 		/* Loop until the buffer size is OK or the original socket buffer size is larger than this one */
 		while (1)
@@ -1215,7 +1217,7 @@ int pcap_startcapture_remote(pcap_t *fp)
 			 */
 			fp->bufsize /= 2;
 
-			if (sockbufsize >= fp->bufsize)
+			if ((u_int) sockbufsize >= fp->bufsize)
 			{
 				fp->bufsize = sockbufsize;
 				break;
