@@ -51,10 +51,7 @@
 #include <stdio.h>	/* for the stderr file */
 #include <stdlib.h>	/* for malloc() and free() */
 
-
-
-
-
+#include "pcap-int.h"
 
 /* Winsock Initialization */
 #ifdef WIN32
@@ -68,6 +65,14 @@ int sockcount = 0;					/* Variable that allows calling the WSAStartup() only one
 #define SHUT_WR SD_SEND			/* The control code for shutdown() is different in Win32 */
 #endif
 
+/* Use strtok_s() on Win32 */
+#ifdef WIN32
+char *tokbuf;
+#define strltok(x, y) \
+	strtok_s((x), (y), &tokbuf)
+#else
+#define strltok strtok
+#endif
 
 /* Size of the buffer that has to keep error messages */
 #define SOCK_ERRBUF_SIZE 1024
@@ -871,7 +876,7 @@ int sock_check_hostlist(char *hostlist, const char *sep, struct sockaddr_storage
 			return -2;
 		}
 
-		token = strtok(temphostlist, sep);
+		token = strltok(temphostlist, sep);
 
 		/* it avoids a warning in the compilation ('addrinfo used but not initialized') */
 		addrinfo = NULL;
@@ -895,7 +900,7 @@ int sock_check_hostlist(char *hostlist, const char *sep, struct sockaddr_storage
 				SOCK_ASSERT(errbuf, 1);
 
 				/* Get next token */
-				token = strtok(NULL, sep);
+				token = strltok(NULL, sep);
 				continue;
 			}
 
@@ -920,7 +925,7 @@ int sock_check_hostlist(char *hostlist, const char *sep, struct sockaddr_storage
 			addrinfo = NULL;
 
 			/* Get next token */
-			token = strtok(NULL, sep);
+			token = strltok(NULL, sep);
 		}
 
 		if (addrinfo)
@@ -1119,7 +1124,7 @@ int sock_getascii_addrport(const struct sockaddr_storage *sockaddr, char *addres
 			(memcmp(&((struct sockaddr_in6 *) sockaddr)->sin6_addr, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", sizeof(struct in6_addr)) == 0))
 		{
 			if (address)
-				strncpy(address, SOCKET_NAME_NULL_DAD, addrlen);
+				strlcpy(address, SOCKET_NAME_NULL_DAD, addrlen);
 			return retval;
 		}
 	}
@@ -1135,13 +1140,13 @@ int sock_getascii_addrport(const struct sockaddr_storage *sockaddr, char *addres
 
 		if (address)
 		{
-			strncpy(address, SOCKET_NO_NAME_AVAILABLE, addrlen);
+			strlcpy(address, SOCKET_NO_NAME_AVAILABLE, addrlen);
 			address[addrlen - 1] = 0;
 		}
 
 		if (port)
 		{
-			strncpy(port, SOCKET_NO_PORT_AVAILABLE, portlen);
+			strlcpy(port, SOCKET_NO_PORT_AVAILABLE, portlen);
 			port[portlen - 1] = 0;
 		}
 
