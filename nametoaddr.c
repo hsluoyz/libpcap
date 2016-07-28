@@ -126,7 +126,12 @@ pcap_nametoaddr(const char *name)
 	bpf_u_int32 **p;
 	struct hostent *hp;
 
+#ifdef _WIN32
+#pragma warning (push)
+#pragma warning (disable: 4996) /* disable MSVC's gethostbyname() warning here */
 	if ((hp = gethostbyname(name)) != NULL) {
+#pragma warning (pop)
+#endif
 #ifndef h_addr
 		hlist[0] = (bpf_u_int32 *)hp->h_addr;
 		NTOHL(hp->h_addr);

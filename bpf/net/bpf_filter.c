@@ -579,7 +579,12 @@ bpf_filter_with_aux_data(pc, p, wirelen, buflen, aux_data)
 			continue;
 
 		case BPF_ALU|BPF_NEG:
+#ifdef _WIN32
+#pragma warning (push)
+#pragma warning (disable: 4146) /* disable MSVC's unary minus operator warning here */
 			A = -A;
+#pragma warning (pop)
+#endif
 			continue;
 
 		case BPF_MISC|BPF_TAX:

@@ -232,7 +232,10 @@ pcap_lookupdev(errbuf)
 	DWORD dwWindowsMajorVersion;
 	char our_errbuf[PCAP_ERRBUF_SIZE+1];
 
+#pragma warning (push)
+#pragma warning (disable: 4996) /* disable MSVC's GetVersion() deprecated warning here */
 	dwVersion = GetVersion();	/* get the OS version */
+#pragma warning (pop)
 	dwWindowsMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
 
 	if (dwVersion >= 0x80000000 && dwWindowsMajorVersion >= 4) {
@@ -296,7 +299,7 @@ pcap_lookupdev(errbuf)
 		while(NAdapts--)
 		{
 			char* tmp = (char*)tUstr;
-			strcpy(tmp, tAstr);
+			strlcpy(tmp, tAstr, 8192);
 			tmp += strlen(tAstr) + 1;
 			tUstr = (WCHAR*)tmp;
 			tAstr += strlen(tAstr) + 1;

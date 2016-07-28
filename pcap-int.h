@@ -364,6 +364,10 @@ struct oneshot_userdata {
 
 int	pcap_offline_read(pcap_t *, int, pcap_handler, u_char *);
 
+#ifdef _WIN32
+FILE *fopen_safe(const char *filename, const char* mode);
+#endif
+
 #ifndef HAVE_STRLCPY
  /*
   * Macro that does the same thing as strlcpy().
@@ -379,6 +383,10 @@ int	pcap_offline_read(pcap_t *, int, pcap_handler, u_char *);
 	strncat_s((x), (z), (y), _TRUNCATE)
   #define sscanf \
 	sscanf_s
+  #define setbuf(x, y) \
+	setvbuf((x), (y), _IONBF, 0)
+#define fopen(x, y) \
+	fopen_safe((x), (y))
 
  #else
   #define strlcpy(x, y, z) \

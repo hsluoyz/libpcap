@@ -410,7 +410,6 @@ pcap_create(const char *device, char *errbuf)
 		 */
 		if (device[0] != '\0' && device[1] == '\0') {
 			size_t length;
-			char *device_ascii;
 
 			length = wcslen((wchar_t *)device);
 			device_str = (char *)malloc(length + 1);
@@ -1625,7 +1624,16 @@ const char *
 pcap_strerror(int errnum)
 {
 #ifdef HAVE_STRERROR
+  #ifdef _WIN32
+	static char errbuf[PCAP_BUF_SIZE];
+	errno_t errno;
+	errno = strerror_s(errbuf, PCAP_BUF_SIZE, errnum);
+	if (errno != 0) /* errno = 0 if successful */
+		strlcpy(errbuf, "strerror_s() error", PCAP_BUF_SIZE);
+	return errbuf;
+  #else
 	return (strerror(errnum));
+  #endif /* _WIN32 */
 #else
 	extern int sys_nerr;
 	extern const char *const sys_errlist[];
@@ -1635,8 +1643,24 @@ pcap_strerror(int errnum)
 		return ((char *)sys_errlist[errnum]);
 	(void)pcap_snprintf(ebuf, sizeof ebuf, "Unknown error: %d", errnum);
 	return(ebuf);
-#endif
+#endif /* HAVE_STRERROR */
 }
+
+/*
+* fopen's safe version on Windows.
+*/
+#ifdef _WIN32
+FILE *fopen_safe(const char *filename, const char* mode)
+{
+	FILE *fp = NULL;
+	errno_t errno;
+	errno = fopen_s(&fp, filename, mode);
+	if (errno == 0)
+		return fp;
+	else
+		return NULL;
+}
+#endif
 
 int
 pcap_setfilter(pcap_t *p, struct bpf_program *fp)
@@ -2180,7 +2204,8 @@ pcap_lib_version(void)
 			    malloc(full_pcap_version_string_len);
 			if (full_pcap_version_string == NULL)
 				return (NULL);
-			sprintf(full_pcap_version_string,
+			pcap_snprintf(full_pcap_version_string,
+				full_pcap_version_string_len,
 			    pcap_version_string_fmt, wpcap_version_string,
 			    pcap_version_string);
 		} else {
@@ -2199,7 +2224,8 @@ pcap_lib_version(void)
 			full_pcap_version_string = malloc(full_pcap_version_string_len);
 			if (full_pcap_version_string == NULL)
 				return (NULL);
-			sprintf(full_pcap_version_string,
+			pcap_snprintf(full_pcap_version_string,
+				full_pcap_version_string_len,
 			    pcap_version_string_packet_dll_fmt,
 			    wpcap_version_string, packet_version_string,
 			    pcap_version_string);
